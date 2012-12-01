@@ -107,14 +107,12 @@ function love.update(dt)
 		end
 	end
 	--Jump-on logic.
-	for i = 1, 4 do
-		if collide_ontop(kip,platforms["platform"..i]) then
-			if kip.jump == false then
-				kip.fall  = false
-			end
+	
+	if collide_ontop(kip,platforms["platform1"]) or collide_ontop(kip,platforms["platform2"]) or collide_ontop(kip,platforms["platform3"]) or collide_ontop(kip,platforms["platform4"])then
+		if kip.jump == false then
+			kip.fall  = false
 		end
-	end
-	if kip.jump == false then
+	elseif kip.jump == false then
 			kip.fall = true
 	end
 	-- Jumping configuration
