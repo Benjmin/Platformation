@@ -1,4 +1,4 @@
--- TODO:Spellcheck comments. Make it so you can jump higher than 300 when on a platform. When that is done create multiple platforms and create test level. Lastly I have to clean up the code and seperate it into multiple files.
+-- TODO:When that is done create multiple platforms and create test level. Lastly I have to clean up the code and seperate it into multiple files.
 
 function love.load()
 	love.graphics.setBackgroundColor(0,40,30)
@@ -15,17 +15,14 @@ function love.load()
 	kip.fall = false
 	floor = 500
 	--configurations for platforms
-	--platforms = {}
-	--for i = 1, 4 do
-	--	platform = {}
-	--	platform.y = 500 - 100*i
-	--	platform.x = 200 
-	--end
-	platform = {}
-	platform.x = 200
-	platform.y = 400
-	platform.width = 200
-	platform.height = 50
+	platforms = {}
+	for i = 1, 4 do
+		platforms["platform"..i] = {}
+		platforms["platform"..i].x = 200
+		platforms["platform"..i].y = 500 - i*100
+		platforms["platform"..i].width = 200
+		platforms["platform"..i].height = 50
+	end
 end
 
 function love.keypressed(key,unicode)
@@ -38,22 +35,22 @@ function love.keypressed(key,unicode)
 end
 
 --Side function for sides
-function sides ( name,x, y, width, height)
-	name["top"] = y
-	name["left"] = x
-	name["right"] = x + width
-	name["bottom"]= y + height
+function sides ( name)
+	name["top"] = name["y"]
+	name["left"] = name["x"]
+	name["right"] = name["x"] + name["width"]
+	name["bottom"]= name["y"] + name["height"]
 end
 
 --Functions for comparing tables.
-local function contains(tbl, val)
+function contains(tbl, val)
   for k,v in pairs(tbl) do
     if v == val then return true end
   end
   return false
 end
 
-local function compare(t1, t2)
+function compare(t1, t2)
   for k,v in pairs(t2) do
     if contains(t1, v) then return true end
   end
@@ -83,9 +80,10 @@ end
  	
 function love.update(dt)
 	-- configuring sides A.K.A more configurations
-	sides(kip,kip.x,kip.y,kip.width,kip.height)
-	sides(platform,platform.x,platform.y,platform.width,platform.height)
-	
+	sides(kip)
+	for i = 1,4 do
+		sides(platforms["platform"..i])
+	end
 	--keyboard setup
 	
 	-- Left key config.
@@ -103,17 +101,22 @@ function love.update(dt)
 	end
 	
 	--Platform hero configurations
-	
-	--Jump-on logic.
-	if collide_ontop(kip,platform) then
-		if kip.jump == false then
-			kip.fall  = false
+	if kip.jump == false then
+		if kip.fall == false then
+			kip.set_height = kip.top
 		end
-	elseif kip.jump == false then
-		kip.set_height = kip.x
-		kip.fall = true
 	end
-	
+	--Jump-on logic.
+	for i = 1, 4 do
+		if collide_ontop(kip,platforms["platform"..i]) then
+			if kip.jump == false then
+				kip.fall  = false
+			end
+		end
+	end
+	if kip.jump == false then
+			kip.fall = true
+	end
 	-- Jumping configuration
 	
 	--Jump logic.
@@ -153,7 +156,9 @@ function love.draw()
 	love.graphics.setColor(0,255,0)
 	draaw(kip)
 	love.graphics.setColor(0,0,255)
-	draaw(platform)
+	for i = 1,4 do 
+		draaw(platforms["platform"..i])
+	end
 	--TESTS
 	love.graphics.setColor(0,255,0)
 	--a short test of kip's sides
