@@ -13,12 +13,14 @@ function love.load()
 	kip.set_height = 460
 	kip.jump_height = 160
 	kip.fall = false
+	kip.leftmo = true
+	kip.rightmo = true
 	floor = 500
 	--configurations for platforms
 	platforms = {}
 	for i = 1, 4 do
 		platforms["platform"..i] = {}
-		platforms["platform"..i].x = 200
+		platforms["platform"..i].x = 200 + i * 50
 		platforms["platform"..i].y = 500 - i*100
 		platforms["platform"..i].width = 200
 		platforms["platform"..i].height = 50
@@ -77,26 +79,97 @@ function collide_ontop ( object1,object2 )
 		end
 	end
 end
- 	
+ 
+ --function for bumping on top of things	
+ function bump_top (object1,object2)
+ 	if object1["top"] == object2["bottom"] then
+ 		local range1 = {}
+ 		 for i = object1["left"],object1["right"] do
+		 	range1[i] = i
+		 end
+		local range2 = {}
+		for i = object2["left"],object2["right"] do
+			range2[i] = i
+		end
+		if compare(range1,range2) then
+			return true
+		else
+			return false
+		end
+	end
+end
+--functions for side bumps
+function left_col (object1, object2)
+	if object1["left"] == object2["right"] then 
+		local range1 = {}
+		 for i = object1["top"],object1["bottom"] do
+		 	range1[i] = i
+		 end
+		local range2 = {}
+		for i = object2["top"],object2["bottom"] do
+			range2[i] = i
+		end
+		if compare(range1,range2) then
+			return true
+		else
+			return false
+		end
+	end
+end
+
+function right_col (object1, object2)
+	if object1["right"] == object2["left"] then 
+		local range1 = {}
+		 for i = object1["top"],object1["bottom"] do
+		 	range1[i] = i
+		 end
+		local range2 = {}
+		for i = object2["top"],object2["bottom"] do
+			range2[i] = i
+		end
+		if compare(range1,range2) then
+			return true
+		else
+			return false
+		end
+	end
+end
+
 function love.update(dt)
 	-- configuring sides A.K.A more configurations
 	sides(kip)
 	for i = 1,4 do
 		sides(platforms["platform"..i])
 	end
+	--side's collisions.
+	if right_col(kip,platforms["platform1"]) or right_col(kip,platforms["platform2"]) or right_col(kip,platforms["platform3"]) or right_col(kip,platforms["platform4"]) then
+		kip.rightmo = false
+	else
+		kip.rightmo = true
+	end
+	
+	if left_col(kip,platforms["platform1"]) or left_col(kip,platforms["platform2"]) or left_col(kip,platforms["platform3"]) or left_col(kip,platforms["platform4"]) then
+		kip.leftmo = false
+	else 
+		kip.leftmo = true
+	end
 	--keyboard setup
 	
 	-- Left key config.
 	if kip.left > 0 then
-		if love.keyboard.isDown("left") then
-			kip.x = kip.x - kip.speed
+		if kip.leftmo then
+			if love.keyboard.isDown("left") then
+				kip.x = kip.x - kip.speed
+			end
 		end
 	end
 	
 	-- Right key config.
-	if kip.right < 800 then 
-		if love.keyboard.isDown("right") then
-			kip.x = kip.x + kip.speed
+	if kip.right < 800 then
+	 	if kip.rightmo then
+			if love.keyboard.isDown("right") then
+				kip.x = kip.x + kip.speed
+			end
 		end
 	end
 	
@@ -114,6 +187,13 @@ function love.update(dt)
 		end
 	elseif kip.jump == false then
 			kip.fall = true
+	end
+	
+	--bump logic.
+	
+	if bump_top(kip,platforms["platform1"]) or bump_top(kip,platforms["platform2"]) or bump_top(kip,platforms["platform3"]) or bump_top(kip,platforms["platform4"]) then
+		kip.fall = true
+		kip.jump =false
 	end
 	-- Jumping configuration
 	
