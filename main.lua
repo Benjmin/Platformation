@@ -1,30 +1,32 @@
--- TODO:When that is done create multiple platforms and create test level. Lastly I have to clean up the code and seperate it into multiple files.
-
+-- TODO:Make jumping natural.  When that is done create multiple platforms and create test level. Lastly I have to clean up the code and seperate it into multiple files. 
+functions = love.filesystem.load("functions/base.lua")
+functions()
+require("levels/level1")
+require("levels/level2")
+local level = 1
 function love.load()
 	love.graphics.setBackgroundColor(0,40,30)
+	checkpoint = {}
+	checkpoint.image = love.graphics.newImage("icon.png")
+	
+	checkpoint.height = 50
+	checkpoint.width = 50
 	--configurations for kip, the hero
 	kip = {}
-	kip.x = 300
-	kip.y = 460
+	kip.x = 400
+	kip.y = 750
 	kip.width = 30
 	kip.height = 40
-	kip.speed = 5
+	kip.speed = 7
 	kip.jump = false
 	kip.set_height = 460
 	kip.jump_height = 160
 	kip.fall = false
 	kip.leftmo = true
 	kip.rightmo = true
-	floor = 500
-	--configurations for platforms
+	floor = 900
+	level1.load()
 	platforms = {}
-	for i = 1, 4 do
-		platforms["platform"..i] = {}
-		platforms["platform"..i].x = 200 + i * 50
-		platforms["platform"..i].y = 500 - i*100
-		platforms["platform"..i].width = 200
-		platforms["platform"..i].height = 50
-	end
 end
 
 function love.keypressed(key,unicode)
@@ -34,141 +36,62 @@ function love.keypressed(key,unicode)
 			kip.jump = true
 		end
 	end
-end
-
---Side function for sides
-function sides ( name)
-	name["top"] = name["y"]
-	name["left"] = name["x"]
-	name["right"] = name["x"] + name["width"]
-	name["bottom"]= name["y"] + name["height"]
-end
-
---Functions for comparing tables.
-function contains(tbl, val)
-  for k,v in pairs(tbl) do
-    if v == val then return true end
-  end
-  return false
-end
-
-function compare(t1, t2)
-  for k,v in pairs(t2) do
-    if contains(t1, v) then return true end
-  end
-  return false
-end
-
--- functions for checking collisions.
-
---function for jumping ontop of things. objects must have sides.
-function collide_ontop ( object1,object2 )
-	if object1["bottom"] == object2["top"] then
-		local range1 ={}
-		 for i = object1["left"],object1["right"] do
-		 	range1[i] = i
-		 end
-		local range2 = {}
-		for i = object2["left"],object2["right"] do
-			range2[i] = i
-		end
-		if compare(range1,range2) then 
-			return true
-		else
-			return false
-		end
-	end
-end
- 
- --function for bumping on top of things	
- function bump_top (object1,object2)
- 	if object1["top"] == object2["bottom"] then
- 		local range1 = {}
- 		 for i = object1["left"],object1["right"] do
-		 	range1[i] = i
-		 end
-		local range2 = {}
-		for i = object2["left"],object2["right"] do
-			range2[i] = i
-		end
-		if compare(range1,range2) then
-			return true
-		else
-			return false
-		end
-	end
-end
---functions for side bumps
-function left_col (object1, object2)
-	if object1["left"] == object2["right"] then 
-		local range1 = {}
-		 for i = object1["top"],object1["bottom"] do
-		 	range1[i] = i
-		 end
-		local range2 = {}
-		for i = object2["top"],object2["bottom"] do
-			range2[i] = i
-		end
-		if compare(range1,range2) then
-			return true
-		else
-			return false
-		end
-	end
-end
-
-function right_col (object1, object2)
-	if object1["right"] == object2["left"] then 
-		local range1 = {}
-		 for i = object1["top"],object1["bottom"] do
-		 	range1[i] = i
-		 end
-		local range2 = {}
-		for i = object2["top"],object2["bottom"] do
-			range2[i] = i
-		end
-		if compare(range1,range2) then
-			return true
-		else
-			return false
-		end
+	if key == "escape" then
+		love.event.push("quit")
 	end
 end
 
 function love.update(dt)
+	--level setup
+	if level == 1 then
+		checkpoint.x = checkpoint.x1
+		checkpoint.y = checkpoint.y1
+	end
+	--checkpoint collision
+	if CheckCollision(checkpoint.x,checkpoint.y,checkpoint.width,checkpoint.height, kip.x,kip.y,kip.width,kip.height) then
+		level = 2
+	end
 	-- configuring sides A.K.A more configurations
 	sides(kip)
-	for i = 1,4 do
-		sides(platforms["platform"..i])
+	-- stuff for levels
+	if level == 1 then
+		level1.update(dt)
+	end
+	if level == 2 then
+		level2.update(dt)
 	end
 	--side's collisions.
-	if right_col(kip,platforms["platform1"]) or right_col(kip,platforms["platform2"]) or right_col(kip,platforms["platform3"]) or right_col(kip,platforms["platform4"]) then
-		kip.rightmo = false
-	else
-		kip.rightmo = true
-	end
-	
-	if left_col(kip,platforms["platform1"]) or left_col(kip,platforms["platform2"]) or left_col(kip,platforms["platform3"]) or left_col(kip,platforms["platform4"]) then
-		kip.leftmo = false
-	else 
-		kip.leftmo = true
-	end
+	if  level == 2 then
+		if  right_col(kip,platforms["platform1"])  or right_col(kip,platforms["platform2"])  or right_col(kip,platforms["platform4"]) then
+				kip.rightmo = false
+		else
+				kip.rightmo = true
+		end
+
+		if  left_col(kip,platforms["platform2"]) or  left_col(kip,platforms["platform4"]) then
+			kip.leftmo = false
+		else 
+			kip.leftmo = true
+		end
+
 	--keyboard setup
 	
 	-- Left key config.
-	if kip.left > 0 then
-		if kip.leftmo then
-			if love.keyboard.isDown("left") then
-				kip.x = kip.x - kip.speed
+
+		if kip.left > 0 then
+			if kip.leftmo then
+				if love.keyboard.isDown("left") then
+					kip.x = kip.x - kip.speed
+				end
 			end
 		end
-	end
 	
 	-- Right key config.
-	if kip.right < 800 then
-	 	if kip.rightmo then
-			if love.keyboard.isDown("right") then
-				kip.x = kip.x + kip.speed
+		if kip.right < 900 then
+	 		if kip.rightmo then
+				if love.keyboard.isDown("right") then
+					kip.x = kip.x + kip.speed
+				end
 			end
 		end
 	end
@@ -179,27 +102,19 @@ function love.update(dt)
 			kip.set_height = kip.top
 		end
 	end
-	--Jump-on logic.
 	
-	if collide_ontop(kip,platforms["platform1"]) or collide_ontop(kip,platforms["platform2"]) or collide_ontop(kip,platforms["platform3"]) or collide_ontop(kip,platforms["platform4"])then
-		if kip.jump == false then
-			kip.fall  = false
-		end
-	elseif kip.jump == false then
-			kip.fall = true
-	end
-	
+	  
 	--bump logic.
 	
-	if bump_top(kip,platforms["platform1"]) or bump_top(kip,platforms["platform2"]) or bump_top(kip,platforms["platform3"]) or bump_top(kip,platforms["platform4"]) then
-		kip.fall = true
-		kip.jump =false
-	end
+	--if bump_top(kip,platforms["platform1"])  or bump_top(kip,platforms["platform2"])  or bump_top(kip,platforms["platform3"])  or bump_top(kip,platforms["platform4"])  then
+	--	kip.fall = true
+	--	kip.jump =false
+	--end
 	-- Jumping configuration
 	
 	--Jump logic.
 	if kip.jump then
-		kip. y = kip.y  - 10
+		kip. y = kip.y  - 10 
 	end
 	
 	--Sets max height of jump ending jump and starting fall.
@@ -227,24 +142,30 @@ function draaw(object)
 end
 
 function love.draw()
+	love.graphics.setColor(255,255,255)
+	love.graphics.draw(checkpoint.image,checkpoint.x,checkpoint.y)
 	-- floor drawing
 	love.graphics.setColor(255,0,0)
-	love.graphics.rectangle("fill",1,500,800,100)
+	love.graphics.rectangle("fill",1,floor,900,100)
 	--kip's image
 	love.graphics.setColor(0,255,0)
 	draaw(kip)
 	love.graphics.setColor(0,0,255)
-	for i = 1,4 do 
-		draaw(platforms["platform"..i])
+	--platforms
+	if level == 1 then
+		level1.draw()
 	end
 	--TESTS
 	love.graphics.setColor(0,255,0)
 	--a short test of kip's sides
-	love.graphics.print(kip.top,200,300)
-	love.graphics.print(kip.left,300,300)
-	love.graphics.print(kip.right,400,300)
-	love.graphics.print(kip.bottom,500,300)
-	love.graphics.print(kip.set_height,600,300)
+	--love.graphics.print(ldt,200,300)
+	--love.graphics.print(kip.left,300,300)
+	--love.graphics.print(kip.right,400,300)
+	--love.graphics.print(kip.bottom,500,300)
+	--love.graphics.print(kip.set_height,600,300)
+	if level == 2 then
+		love.graphics.print("You Won",450,25)
+	end
 	-- tests for jumping
 	
 	-- test for seeing if  jump is true
