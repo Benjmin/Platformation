@@ -14,7 +14,7 @@ function love.load()
 	--configurations for kip, the hero
 	kip = {}
 	kip.x = 400
-	kip.y = 750
+	kip.y = 860
 	kip.width = 30
 	kip.height = 40
 	kip.speed = 7
