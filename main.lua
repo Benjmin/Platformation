@@ -8,13 +8,12 @@ function love.load()
 	love.graphics.setBackgroundColor(0,40,30)
 	checkpoint = {}
 	checkpoint.image = love.graphics.newImage("icon.png")
-	
 	checkpoint.height = 50
 	checkpoint.width = 50
 	--configurations for kip, the hero
 	kip = {}
 	kip.x = 400
-	kip.y = 860
+	kip.y = 859
 	kip.width = 30
 	kip.height = 40
 	kip.speed = 7
@@ -24,9 +23,13 @@ function love.load()
 	kip.fall = false
 	kip.leftmo = true
 	kip.rightmo = true
-	floor = 900
-	level1.load()
 	platforms = {}
+	platforms.floor= {}
+	platforms.floor.width = 900
+	platforms.floor.height = 100
+	platforms.floor.x = 1
+	platforms.floor.y = 900
+	level1.load()
 end
 
 function love.keypressed(key,unicode)
@@ -39,6 +42,10 @@ function love.keypressed(key,unicode)
 	if key == "escape" then
 		love.event.push("quit")
 	end
+	--Debug
+	 if key == "d" then --set to whatever key you want to use
+        	debug.debug()
+     	end
 end
 
 function love.update(dt)
@@ -53,6 +60,7 @@ function love.update(dt)
 	end
 	-- configuring sides A.K.A more configurations
 	sides(kip)
+	sides(platforms.floor)
 	-- stuff for levels
 	if level == 1 then
 		level1.update(dt)
@@ -105,6 +113,7 @@ function love.update(dt)
 	
 	  
 	--bump logic.
+	collision(platforms)
 	
 	--if bump_top(kip,platforms["platform1"])  or bump_top(kip,platforms["platform2"])  or bump_top(kip,platforms["platform3"])  or bump_top(kip,platforms["platform4"])  then
 	--	kip.fall = true
@@ -123,12 +132,7 @@ function love.update(dt)
 		kip.fall = true
 	end
 	
-	-- Fall configuration.
-	
-	--Ends fall
-	if kip.bottom == floor then
-		kip.fall = false
-	end
+
 	 
 	 --Fall logic
 	if kip.fall then
@@ -138,7 +142,7 @@ end
 
 -- A function for drawing rectangles
 function draaw(object)
-	love.graphics.rectangle("fill",object["x"],object["y"],object["width"],object["height"])
+	love.graphics.rectangle("fill",object.x,object.y,object.width,object.height)
 end
 
 function love.draw()
@@ -146,7 +150,8 @@ function love.draw()
 	love.graphics.draw(checkpoint.image,checkpoint.x,checkpoint.y)
 	-- floor drawing
 	love.graphics.setColor(255,0,0)
-	love.graphics.rectangle("fill",1,floor,900,100)
+	--fix this
+	draaw(platforms.floor)
 	--kip's image
 	love.graphics.setColor(0,255,0)
 	draaw(kip)
